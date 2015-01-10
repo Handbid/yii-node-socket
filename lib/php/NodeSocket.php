@@ -2,6 +2,7 @@
 
 namespace YiiNodeSocket;
 
+use Yii;
 use yii\base\Component;
 use YiiNodeSocket\Assets\NodeSocketAssets;
 
@@ -26,6 +27,12 @@ class NodeSocket extends Component {
      * @var string
      */
     public $host = '0.0.0.0';
+    
+    /**
+     * Are we using a secure protocol? (i.e. http vs https)
+     * @var boolean
+     */
+    public $isSecureConnection = false;
 
     /**
      * If your session var name is SID or other change this value to it
@@ -83,6 +90,16 @@ class NodeSocket extends Component {
      * @var string
      */
     public $pidFile = 'socket-transport.pid';
+
+    /**
+     * @var string
+     */
+    public $keyFile = 'localhost.key';
+
+    /**
+     * @var string
+     */
+    public $certFile = 'localhost.crt';
 
     /**
      * @var int timeout for handshaking in miliseconds
@@ -197,7 +214,7 @@ class NodeSocket extends Component {
     }
 
     /**
-     * @return array
+     * @return string[]
      */
     public function getAllowedServersAddresses() {
         $allow = array();
@@ -211,6 +228,36 @@ class NodeSocket extends Component {
             }
         }
         return array_unique($allow);
+    }
+    
+    /**
+     * Use Secure connection flag to return proper protocol
+     * @return string
+     */
+    public function getProtocol()
+    {
+        return (Yii::$app->nodeSocket->isSecureConnection) ? 'https' : 'http';
+    }
+    
+    /**
+     * Use Secure connection flag to return proper protocol
+     * @return string
+     */
+    public function getClientUrl()
+    {
+        $args = [];
+        if (Yii::$app->nodeSocket->isSecureConnection) {
+            return sprintf('io.connect(\'%s://%s:%s/client\',{secure: true})',
+                $this->protocol,
+                $this->host,
+                $this->port);
+        } else {
+            return sprintf('io.connect(\'%s://%s:%s/client\')',
+                $this->protocol,
+                $this->host,
+                $this->port);
+        }
+        
     }
 
 }

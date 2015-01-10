@@ -31,10 +31,21 @@ class NodeSocketAssets extends AssetBundle
 
     public function init()
     {
-        $this->js[] = sprintf(
-            "http://%s:%d%s", Yii::$app->nodeSocket->host, Yii::$app->nodeSocket->port, '/socket.io/socket.io.js'
-        );
+        $this->js[] = $this->getSocketScriptPath();
         $this->js[] = 'client/client.js';
+    }
+    
+    protected function getSocketScriptPath()
+    {
+        $pathParts = [
+            Yii::$app->nodeSocket->protocol, 
+            '://',
+            Yii::$app->nodeSocket->host, 
+            ':',
+            Yii::$app->nodeSocket->port, 
+            '/socket.io/socket.io.js'
+        ];
+        return implode('', $pathParts);
     }
 
 }

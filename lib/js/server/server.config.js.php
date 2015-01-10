@@ -12,22 +12,10 @@ module.exports = {
     dbOptions : <?php echo json_encode($nodeSocket->getDb()->getConnectionOptions()); ?>,
     checkClientOrigin : <?php echo (int) $nodeSocket->checkClientOrigin; ?>,
     sessionVarName : '<?php echo $nodeSocket->sessionVarName; ?>',
-    socketLogFile : '<?php echo $nodeSocket->socketLogFile; ?>'
+    socketLogFile : '<?php echo $nodeSocket->socketLogFile; ?>',
+    isSecureConnection : '<?php echo $nodeSocket->isSecureConnection; ?>',
+    keyFile : '<?php echo $nodeSocket->keyFile; ?>',
+    certFile : '<?php echo $nodeSocket->certFile; ?>'
 };
 
 <?php
-/*
-
-module.exports = {
-	host : 'yii.handbid.lan',
-	port : parseInt('3002'),
-	origin : '*:*',
-	allowedServers : ["yii.handbid.local","yii.handbid.lan","handbid.local","dev.handbid.com","10.0.0.180","192.168.246.128","localhost","127.0.0.1"],
-	dbOptions : {"driver":"dummy","config":[]},
-	checkClientOrigin : 0,
-	sessionVarName : 'PHPSESSID',
-        socketLogFile : '/var/log/yii/node-socket.log'
-};
-
-*/
-
