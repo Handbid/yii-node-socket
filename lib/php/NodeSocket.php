@@ -11,6 +11,16 @@ require_once 'frames/FrameFactory.php';
 
 class NodeSocket extends Component {
 
+    const SOCKET_IO_READ = true;
+    
+    const SOCKET_IO_WRITE = false;
+    
+    const SOCKET_IO_PROTOCOL = 1;
+
+    const SOCKET_PROTOCOL_UNSECURE = 'http';
+
+    const SOCKET_PROTOCOL_SECURE = 'https';
+    
     /**
      * Node js server host to bind http and socket server
      * Valid values is:
@@ -27,6 +37,24 @@ class NodeSocket extends Component {
      * @var string
      */
     public $host = '0.0.0.0';
+    
+    /**
+     * request path after host
+     * Example path is /client. Path typically refers to a file or location on a 
+     * web server, e.g. /directory/file.html or /news/story/Big+Event so on
+     *
+     * @var string
+     */
+    public $webPath = '/client';
+    
+    /**
+     * request path after host
+     * Example path is /server. Path typically refers to a file or location on a 
+     * web server, e.g. /directory/file.html or /news/story/Big+Event so on
+     *
+     * @var string
+     */
+    public $serverPath = '/server';
     
     /**
      * Are we using a secure protocol? (i.e. http vs https)
@@ -87,6 +115,13 @@ class NodeSocket extends Component {
     public $checkClientOrigin = true;
 
     /**
+     * If set to false, php service client and server js do not validate certs
+     *
+     * @var bool
+     */
+    public $checkCertificates = true;
+
+    /**
      * @var string
      */
     public $pidFile = 'socket-transport.pid';
@@ -109,7 +144,7 @@ class NodeSocket extends Component {
     /**
      * @var array
      */
-    public $dbConfiguration = array('driver' => 'dummy');
+    public $dbConfiguration = ['driver' => 'dummy'];
 
     /**
      * @var string
@@ -134,15 +169,20 @@ class NodeSocket extends Component {
     public function init() {
         parent::init();
 
-//		spl_autoload_unregister(array('YiiBase','autoload'));
+        // Standarized autoloader name for Yii extensions
         require_once 'Autoload.php';
         \YiiNodeSocket\Autoload::register(__DIR__);
-//		spl_autoload_register(array('YiiBase','autoload'));
+        
+        // check for standard autoloader method
         if (function_exists('__autoload')) {
             // Be polite and ensure that userland autoload gets retained
             spl_autoload_register('__autoload');
         }
+        
+        // Store a shared frame factory object
         $this->_frameFactory = new \YiiNodeSocket\Frames\FrameFactory($this);
+        
+        // Create and configure database component
         $this->_db = new \YiiNodeSocket\Components\Db($this);
         foreach ($this->dbConfiguration as $k => $v) {
             $this->_db->$k = $v;
@@ -168,6 +208,45 @@ class NodeSocket extends Component {
      */
     public function getClient() {
         return $this->_client;
+    }
+    
+    /**
+     * Use Secure connection flag to return proper protocol
+     * @return string
+     */
+    public function getProtocol()
+    {
+        if (Yii::$app->nodeSocket->isSecureConnection) {
+            return static::SOCKET_PROTOCOL_SECURE;
+        } 
+        return static::SOCKET_PROTOCOL_UNSECURE;
+    }
+    
+    /**
+     * Use Secure connection flag to return proper protocol
+     * @return string
+     */
+    public function getClientUrl()
+    {
+        return sprintf('%s://%s:%s%s',
+                $this->protocol,
+                $this->host,
+                $this->port,
+                $this->webPath);
+    }
+    
+    /**
+     * Use Secure connection flag to return proper protocol
+     * @return JSON
+     */
+    public function getClientParams()
+    {
+        $params = [
+            'secure' => Yii::$app->nodeSocket->isSecureConnection
+        ];
+        
+        // Return parameters in JSON encoded format
+        return json_encode($params);
     }
 
     /**
@@ -228,36 +307,6 @@ class NodeSocket extends Component {
             }
         }
         return array_unique($allow);
-    }
-    
-    /**
-     * Use Secure connection flag to return proper protocol
-     * @return string
-     */
-    public function getProtocol()
-    {
-        return (Yii::$app->nodeSocket->isSecureConnection) ? 'https' : 'http';
-    }
-    
-    /**
-     * Use Secure connection flag to return proper protocol
-     * @return string
-     */
-    public function getClientUrl()
-    {
-        $args = [];
-        if (Yii::$app->nodeSocket->isSecureConnection) {
-            return sprintf('io.connect(\'%s://%s:%s/client\',{secure: true})',
-                $this->protocol,
-                $this->host,
-                $this->port);
-        } else {
-            return sprintf('io.connect(\'%s://%s:%s/client\')',
-                $this->protocol,
-                $this->host,
-                $this->port);
-        }
-        
     }
 
 }

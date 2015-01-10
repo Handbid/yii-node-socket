@@ -13,7 +13,7 @@ module.exports = {
     checkClientOrigin : <?php echo (int) $nodeSocket->checkClientOrigin; ?>,
     sessionVarName : '<?php echo $nodeSocket->sessionVarName; ?>',
     socketLogFile : '<?php echo $nodeSocket->socketLogFile; ?>',
-    isSecureConnection : '<?php echo $nodeSocket->isSecureConnection; ?>',
+    checkCertificates : '<?php echo $nodeSocket->checkCertificates; ?>',
     keyFile : '<?php echo $nodeSocket->keyFile; ?>',
     certFile : '<?php echo $nodeSocket->certFile; ?>'
 };
