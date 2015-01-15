@@ -161,8 +161,13 @@ abstract class AFrame implements \ArrayAccess {
 		$client = $this->createClient();
 		$client->origin = $this->_nodeSocket->getOrigin();
 		$client->sendCookie = true;
+        if (\Yii::$app->session->id) {
+            $sessionId = \Yii::$app->session->id;
+        } else {
+            $sessionId = \Yii::$app->user->identity->authKey;
+        }
 		$client->cookie = implode('; ', array(
-			'PHPSESSID=' . \Yii::$app->session->id,
+			'PHPSESSID=' . $sessionId,
 			'expires=' . (time() + $this->_nodeSocket->cookieLifeTime)
 		));
 		$client->setHandshakeTimeout($this->_nodeSocket->handshakeTimeout);
