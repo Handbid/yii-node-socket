@@ -1,4 +1,4 @@
-node_modules
+lib/js/server/node_modules
 client.js
 lib/js/server/server.config.js
 tests/php/bootstrap.php
