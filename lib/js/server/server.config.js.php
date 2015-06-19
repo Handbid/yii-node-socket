@@ -5,7 +5,7 @@
  */
 ?>
 module.exports = {
-    host : '<?php echo $nodeSocket->host; ?>',
+    host : '0.0.0.0',
     port : parseInt('<?php echo $nodeSocket->port; ?>'),
     origin : '<?php echo $nodeSocket->getOrigin(); ?>',
     allowedServers : <?php echo json_encode($nodeSocket->getAllowedServersAddresses()); ?>,
