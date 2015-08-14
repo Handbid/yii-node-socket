@@ -161,11 +161,16 @@ abstract class AFrame implements \ArrayAccess {
 		$client = $this->createClient();
 		$client->origin = $this->_nodeSocket->getOrigin();
 		$client->sendCookie = true;
-        if (\Yii::$app->session->id) {
-            $sessionId = \Yii::$app->session->id;
-        } else {
-            $sessionId = \Yii::$app->user->identity->authKey;
-        }
+                if (get_class(\Yii::$app) == 'yii\web\Application') {
+                    if (\Yii::$app->session->id) {
+                        $sessionId = \Yii::$app->session->id;
+                    } else {
+                        $sessionId = \Yii::$app->user->identity->authKey;
+                    }
+                } else {
+                    $sessionId = uniqid();
+                }
+
 		$client->cookie = implode('; ', array(
 			'PHPSESSID=' . $sessionId,
 			'expires=' . (time() + $this->_nodeSocket->cookieLifeTime)
@@ -240,11 +245,17 @@ abstract class AFrame implements \ArrayAccess {
 	}
 
 	private function _createContainer() {
+            
+                if (get_class(\Yii::$app) == 'yii\web\Application') {
+                    $sid = \Yii::$app->session->id;
+                } else {
+                    $sid = uniqid();
+                }
 		$this->_container = array(
 			'meta' => array(
 				'id' => $this->getId(),
 				'type' => $this->getType(),
-				'sid' => \Yii::$app->session->id,
+				'sid' => $sid,
 				'data' => array()
 			),
 			'data' => array()
