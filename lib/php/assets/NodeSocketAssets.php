@@ -37,14 +37,23 @@ class NodeSocketAssets extends AssetBundle
     
     protected function getSocketScriptPath()
     {
-        $pathParts = [
-            Yii::$app->nodeSocket->protocol, 
-            '://',
-            Yii::$app->nodeSocket->host, 
-            ':',
-            Yii::$app->nodeSocket->port, 
-            '/socket.io/socket.io.js'
-        ];
+        if (!(int)Yii::$app->nodeSocket->port) {
+            $pathParts = [
+                Yii::$app->nodeSocket->protocol, 
+                '://',
+                Yii::$app->nodeSocket->host, 
+                '/socket.io/socket.io.js'
+            ];
+        } else {
+            $pathParts = [
+                Yii::$app->nodeSocket->protocol, 
+                '://',
+                Yii::$app->nodeSocket->host, 
+                ':',
+                Yii::$app->nodeSocket->port, 
+                '/socket.io/socket.io.js'
+            ];
+        }
         return implode('', $pathParts);
     }
 

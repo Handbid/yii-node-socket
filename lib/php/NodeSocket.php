@@ -228,11 +228,18 @@ class NodeSocket extends Component {
      */
     public function getClientUrl()
     {
-        return sprintf('%s://%s:%s%s',
-                $this->protocol,
-                $this->host,
-                $this->port,
-                $this->webPath);
+        if ($this->port) {
+            return sprintf('%s://%s:%s%s',
+                    $this->protocol,
+                    $this->host,
+                    $this->port,
+                    $this->webPath);
+        } else {
+            return sprintf('%s://%s%s',
+                    $this->protocol,
+                    $this->host,
+                    $this->webPath);
+        }
     }
     
     /**
