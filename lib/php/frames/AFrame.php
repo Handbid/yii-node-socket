@@ -190,12 +190,21 @@ abstract class AFrame implements \ArrayAccess {
 	 * @return \ElephantIO\Client
 	 */
 	protected function createClient() {
+            if ($this->_nodeSocket->isSecureConnection) {
 		return new \ElephantIO\Client(
-			sprintf('http://%s:%s', $this->_nodeSocket->host, $this->_nodeSocket->port),
-			'socket.io',
-            NodeSocket::SOCKET_IO_PROTOCOL,
-			NodeSocket::SOCKET_IO_WRITE
+                    sprintf('https://%s', $this->_nodeSocket->host) ,
+                    '',
+                    NodeSocket::SOCKET_IO_PROTOCOL,
+                    NodeSocket::SOCKET_IO_WRITE
 		);
+            } else {
+		return new \ElephantIO\Client(
+                    sprintf('http://%s:%s', $this->_nodeSocket->host, $this->_nodeSocket->port) ,
+                    'socket.io',
+                    NodeSocket::SOCKET_IO_PROTOCOL,
+                    NodeSocket::SOCKET_IO_WRITE
+		);
+            }
 	}
 
 	protected function init() {}
