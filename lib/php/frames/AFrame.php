@@ -192,8 +192,8 @@ abstract class AFrame implements \ArrayAccess {
 	protected function createClient() {
             if ($this->_nodeSocket->isSecureConnection) {
 		return new \ElephantIO\Client(
-                    sprintf('https://%s', $this->_nodeSocket->host) ,
-                    '',
+                    sprintf('https://%s:%s', $this->_nodeSocket->host, $this->_nodeSocket->port) ,
+                    'socket.io',
                     NodeSocket::SOCKET_IO_PROTOCOL,
                     NodeSocket::SOCKET_IO_WRITE
 		);

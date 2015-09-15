@@ -11,6 +11,7 @@ module.exports = {
     allowedServers : <?php echo json_encode($nodeSocket->getAllowedServersAddresses()); ?>,
     dbOptions : <?php echo json_encode($nodeSocket->getDb()->getConnectionOptions()); ?>,
     checkClientOrigin : <?php echo (int) $nodeSocket->checkClientOrigin; ?>,
+    isSecureConnection : <?php echo (int) $nodeSocket->isSecureConnection; ?>,
     sessionVarName : '<?php echo $nodeSocket->sessionVarName; ?>',
     socketLogFile : '<?php echo $nodeSocket->socketLogFile; ?>',
     checkCertificates : '<?php echo $nodeSocket->checkCertificates; ?>',
