@@ -285,7 +285,7 @@ abstract class AFrame implements \ArrayAccess {
 	 * <p>
 	 *       The return value will be casted to boolean if non-boolean was returned.
 	 */
-	public function offsetExists($offset) {
+	public function offsetExists(mixed $offset): bool {
 		return array_key_exists($offset, $this->_container['data']);
 	}
 
@@ -300,7 +300,7 @@ abstract class AFrame implements \ArrayAccess {
 	 *
 	 * @return mixed Can return all value types.
 	 */
-	public function offsetGet($offset) {
+	public function offsetGet(mixed $offset): mixed {
 		return array_key_exists($offset, $this->_container['data']) ? $this->_container['data'][$offset] : null;
 	}
 
@@ -318,7 +318,7 @@ abstract class AFrame implements \ArrayAccess {
 	 *
 	 * @return void
 	 */
-	public function offsetSet($offset, $value) {
+	public function offsetSet(mixed $offset, mixed $value): void {
 		if (is_null($offset)) {
 			$this->_container['data'][] = $offset;
 		} else {
@@ -337,7 +337,7 @@ abstract class AFrame implements \ArrayAccess {
 	 *
 	 * @return void
 	 */
-	public function offsetUnset($offset) {
+    public function offsetUnset(mixed $offset): void {
 		unset($this->_container['data'][$offset]);
 	}
 }
