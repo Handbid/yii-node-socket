@@ -159,29 +159,12 @@ abstract class AFrame implements \ArrayAccess {
 
 	protected function emit() {
 		$client = $this->createClient();
-		$client->origin = $this->_nodeSocket->getOrigin();
-		$client->sendCookie = true;
-                if (get_class(\Yii::$app) == 'yii\web\Application') {
-                    if (\Yii::$app->session->id) {
-                        $sessionId = \Yii::$app->session->id;
-                    } else {
-                        $sessionId = \Yii::$app->user->identity->authKey;
-                    }
-                } else {
-                    $sessionId = uniqid();
-                }
-
-		$client->cookie = implode('; ', array(
-			'PHPSESSID=' . $sessionId,
-			'expires=' . (time() + $this->_nodeSocket->cookieLifeTime)
-		));
 		$client->setHandshakeTimeout($this->_nodeSocket->handshakeTimeout);
 		$client->init();
 
-		$client
-			->createFrame()
-			->endPoint('/server')
-			->emit($this->getType(), $this->getFrame());
+		// Socket.io 4.x compatible emit
+		// API: emit(eventName, argsArray, namespace)
+		$client->emit($this->getType(), [$this->getFrame()], '/server');
 
 		$client->close();
 	}
