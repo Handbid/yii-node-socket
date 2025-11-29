@@ -173,21 +173,27 @@ abstract class AFrame implements \ArrayAccess {
 	 * @return \ElephantIO\Client
 	 */
 	protected function createClient() {
-            if ($this->_nodeSocket->isSecureConnection) {
+		// For server-to-server communication (PHP to Node.js), use internal network
+		// External URLs (via Cloudflare/CDN) don't properly forward Socket.io events
+		//
+		// Priority for host/port:
+		// 1. NodeSocket component config (internalHost/internalPort) - set in environment main.php
+		// 2. Environment variables (NODE_INTERNAL_HOST/NODE_INTERNAL_PORT) - for Docker
+		// 3. Defaults: 'localhost' for host, 3002 for port
+		$host = $this->_nodeSocket->internalHost
+			?: getenv('NODE_INTERNAL_HOST')
+			?: 'localhost';
+		$port = $this->_nodeSocket->internalPort
+			?: getenv('NODE_INTERNAL_PORT')
+			?: 3002;
+		$url = sprintf('http://%s:%s', $host, $port);
+
 		return new \ElephantIO\Client(
-                    sprintf('https://%s:%s', $this->_nodeSocket->host, $this->_nodeSocket->port) ,
-                    'socket.io',
-                    NodeSocket::SOCKET_IO_PROTOCOL,
-                    NodeSocket::SOCKET_IO_WRITE
+			$url,
+			'socket.io',
+			NodeSocket::SOCKET_IO_PROTOCOL,
+			NodeSocket::SOCKET_IO_WRITE
 		);
-            } else {
-		return new \ElephantIO\Client(
-                    sprintf('http://%s:%s', $this->_nodeSocket->host, $this->_nodeSocket->port) ,
-                    'socket.io',
-                    NodeSocket::SOCKET_IO_PROTOCOL,
-                    NodeSocket::SOCKET_IO_WRITE
-		);
-            }
 	}
 
 	protected function init() {}

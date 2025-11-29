@@ -82,6 +82,24 @@ class NodeSocket extends Component {
     public $port = 3001;
 
     /**
+     * Internal host for PHP-to-Node server-to-server communication.
+     * This bypasses external proxies (like Cloudflare) that may not forward Socket.io events.
+     * In Docker: typically 'node' (container name)
+     * In production: typically 'localhost' or internal IP
+     *
+     * @var string|null
+     */
+    public $internalHost = null;
+
+    /**
+     * Internal port for PHP-to-Node server-to-server communication.
+     * Usually 3002 (the raw Node.js port, not the external proxy port)
+     *
+     * @var int|null
+     */
+    public $internalPort = null;
+
+    /**
      * Can be string, every domain|ip separated by a comma
      * or array
      *
