@@ -162,9 +162,9 @@ abstract class AFrame implements \ArrayAccess {
 		$client->setHandshakeTimeout($this->_nodeSocket->handshakeTimeout);
 		$client->init();
 
-		// Socket.io 4.x compatible emit
-		// API: emit(eventName, argsArray, namespace)
-		$client->emit($this->getType(), [$this->getFrame()], '/server');
+		// Socket.io 4.x compatible emit WITH acknowledgment
+		// Waits for server to confirm receipt, throws on timeout
+		$client->emitWithAck($this->getType(), [$this->getFrame()], '/server', 10);
 
 		$client->close();
 	}
