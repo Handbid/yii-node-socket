@@ -158,15 +158,26 @@ abstract class AFrame implements \ArrayAccess {
 	}
 
 	protected function emit() {
-		$client = $this->createClient();
-		$client->setHandshakeTimeout($this->_nodeSocket->handshakeTimeout);
-		$client->init();
+		$persistentClient = $this->_nodeSocket->getPersistentClient();
 
-		// Socket.io 4.x compatible emit WITH acknowledgment
-		// Waits for server to confirm receipt, throws on timeout
-		$client->emitWithAck($this->getType(), [$this->getFrame()], '/server', 10);
-
-		$client->close();
+		if ($persistentClient) {
+			// Persistent mode (long-running consumer) — reuse shared connection
+			try {
+				$persistentClient->emitWithAck($this->getType(), [$this->getFrame()], '/server', 10);
+			} catch (\Exception $e) {
+				// Connection dropped — reconnect and retry once
+				$persistentClient->reconnect();
+				$persistentClient->of('/server');
+				$persistentClient->emitWithAck($this->getType(), [$this->getFrame()], '/server', 10);
+			}
+		} else {
+			// Normal mode (web requests) — connect, emit, close per event
+			$client = $this->createClient();
+			$client->setHandshakeTimeout($this->_nodeSocket->handshakeTimeout);
+			$client->init();
+			$client->emitWithAck($this->getType(), [$this->getFrame()], '/server', 10);
+			$client->close();
+		}
 	}
 
 	/**

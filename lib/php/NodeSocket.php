@@ -184,6 +184,16 @@ class NodeSocket extends Component {
      */
     protected $_client;
 
+    /**
+     * @var \ElephantIO\Client|null Shared client for long-running consumers
+     */
+    private $_persistentClient = null;
+
+    /**
+     * @var bool Whether persistent mode is enabled (for consumer processes)
+     */
+    private $_persistentMode = false;
+
     public function init() {
         parent::init();
 
@@ -332,6 +342,70 @@ class NodeSocket extends Component {
             }
         }
         return array_unique($allow);
+    }
+
+    /**
+     * Enable persistent client mode.
+     * Call this before a long-running consumer loop so that emit()
+     * reuses a single Socket.io connection instead of connect/close per event.
+     */
+    public function enablePersistentClient() {
+        $this->_persistentMode = true;
+    }
+
+    /**
+     * Get the persistent Socket.io client, creating or reconnecting as needed.
+     * Returns null when persistent mode is not enabled (normal web requests).
+     *
+     * @return \ElephantIO\Client|null
+     */
+    public function getPersistentClient() {
+        if (!$this->_persistentMode) {
+            return null;
+        }
+
+        // Return existing client if still connected
+        if ($this->_persistentClient && $this->_persistentClient->isConnected()) {
+            return $this->_persistentClient;
+        }
+
+        // Build internal URL (same logic as AFrame::createClient)
+        $host = $this->internalHost
+            ?: getenv('NODE_INTERNAL_HOST')
+            ?: 'localhost';
+        $port = $this->internalPort
+            ?: getenv('NODE_INTERNAL_PORT')
+            ?: 3002;
+        $url = sprintf('http://%s:%s', $host, $port);
+
+        $client = new \ElephantIO\Client(
+            $url,
+            'socket.io',
+            self::SOCKET_IO_PROTOCOL,
+            self::SOCKET_IO_WRITE
+        );
+        $client->setHandshakeTimeout($this->handshakeTimeout);
+        $client->init();
+        $client->of('/server');
+
+        $this->_persistentClient = $client;
+        return $this->_persistentClient;
+    }
+
+    /**
+     * Release the persistent client and disable persistent mode.
+     * Call this in a finally block after the consumer loop exits.
+     */
+    public function releasePersistentClient() {
+        if ($this->_persistentClient) {
+            try {
+                $this->_persistentClient->close();
+            } catch (\Throwable $e) {
+                // Ignore close errors during cleanup
+            }
+            $this->_persistentClient = null;
+        }
+        $this->_persistentMode = false;
     }
 
 }
