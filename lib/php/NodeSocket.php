@@ -366,7 +366,16 @@ class NodeSocket extends Component {
 
         // Return existing client if still connected
         if ($this->_persistentClient && $this->_persistentClient->isConnected()) {
-            return $this->_persistentClient;
+            // Respond to any pending Engine.IO pings before returning.
+            // Without this, pings go unanswered between events and the Node
+            // server closes the connection after pingInterval+pingTimeout.
+            if (!$this->_persistentClient->maintainConnection()) {
+                // Connection died during maintenance — fall through to reconnect
+                Yii::warning('[SOCKET-KEEPALIVE] Persistent connection dead during maintenance, reconnecting', 'node-events');
+                $this->_persistentClient = null;
+            } else {
+                return $this->_persistentClient;
+            }
         }
 
         // Build internal URL (same logic as AFrame::createClient)

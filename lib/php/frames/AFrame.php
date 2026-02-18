@@ -174,9 +174,17 @@ abstract class AFrame implements \ArrayAccess {
 			// Normal mode (web requests) — connect, emit, close per event
 			$client = $this->createClient();
 			$client->setHandshakeTimeout($this->_nodeSocket->handshakeTimeout);
-			$client->init();
-			$client->emitWithAck($this->getType(), [$this->getFrame()], '/server', 10);
-			$client->close();
+			try {
+				$client->init();
+				$client->emitWithAck($this->getType(), [$this->getFrame()], '/server', 10);
+			} catch (\Exception $e) {
+				// ACK timeout or connection failure — log but don't crash the request.
+				// Real-time notifications are best-effort; the calling code (e.g. Stripe
+				// webhook) should not fail because a Socket.io event wasn't acknowledged.
+				\Yii::warning('[SOCKET-EMIT-FAIL] web request: ' . $e->getMessage(), 'node-events');
+			} finally {
+				$client->close();
+			}
 		}
 	}
 
