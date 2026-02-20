@@ -158,34 +158,15 @@ abstract class AFrame implements \ArrayAccess {
 	}
 
 	protected function emit() {
-		$persistentClient = $this->_nodeSocket->getPersistentClient();
+		$client = $this->createClient();
+		$client->setHandshakeTimeout($this->_nodeSocket->handshakeTimeout);
+		$client->init();
 
-		if ($persistentClient) {
-			// Persistent mode (long-running consumer) — reuse shared connection
-			try {
-				$persistentClient->emitWithAck($this->getType(), [$this->getFrame()], '/server', 10);
-			} catch (\Exception $e) {
-				// Connection dropped — reconnect and retry once
-				$persistentClient->reconnect();
-				$persistentClient->of('/server');
-				$persistentClient->emitWithAck($this->getType(), [$this->getFrame()], '/server', 10);
-			}
-		} else {
-			// Normal mode (web requests) — connect, emit, close per event
-			$client = $this->createClient();
-			$client->setHandshakeTimeout($this->_nodeSocket->handshakeTimeout);
-			try {
-				$client->init();
-				$client->emitWithAck($this->getType(), [$this->getFrame()], '/server', 10);
-			} catch (\Exception $e) {
-				// ACK timeout or connection failure — log but don't crash the request.
-				// Real-time notifications are best-effort; the calling code (e.g. Stripe
-				// webhook) should not fail because a Socket.io event wasn't acknowledged.
-				\Yii::warning('[SOCKET-EMIT-FAIL] web request: ' . $e->getMessage(), 'node-events');
-			} finally {
-				$client->close();
-			}
-		}
+		// Socket.io 4.x compatible emit WITH acknowledgment
+		// Waits for server to confirm receipt, throws on timeout
+		$client->emitWithAck($this->getType(), [$this->getFrame()], '/server', 10);
+
+		$client->close();
 	}
 
 	/**
