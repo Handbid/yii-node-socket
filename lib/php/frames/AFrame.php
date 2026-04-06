@@ -167,10 +167,10 @@ abstract class AFrame implements \ArrayAccess {
 			// Waits for server to confirm receipt, throws on timeout
 			$client->emitWithAck($this->getType(), [$this->getFrame()], '/server', 10);
 		} catch (\Exception $e) {
-			// ACK timeout or connection failure — log but don't crash the request.
-			// Real-time notifications are best-effort; the calling code (e.g. Stripe
-			// webhook) should not fail because a Socket.io event wasn't acknowledged.
-			\Yii::warning('[SOCKET-EMIT-FAIL] web request: ' . $e->getMessage(), 'node-events');
+			// Log and re-throw so callers (HbNodeEvent::sendClient retry loop,
+			// HbRabbitService consumer) can detect failure and retry or NACK.
+			\Yii::warning('[SOCKET-EMIT-FAIL] ' . $e->getMessage(), 'node-events');
+			throw $e;
 		} finally {
 			$client->close();
 		}
