@@ -58,6 +58,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? '  PASS ' : '  FAIL ') + 
     await new Promise((r) => S.emit('event', { meta: { id: 'h', type: 'event', data: { event: 'heartbeat', type: 'heartbeat' } }, data: { type: 'heartbeat' } }, r));
     const h2 = await get(BASE, '/healthz'); const hb = JSON.parse(h2.body);
     ok(hb.eventsProcessed >= 2 && hb.lastHeartbeatAt, `health counters: events=${hb.eventsProcessed} heartbeat=${!!hb.lastHeartbeatAt}`);
+    if (N > 1) { await sleep(300); const hp = JSON.parse((await get(BASE + N - 1, '/healthz')).body); ok(!!hp.lastHeartbeatAt, `heartbeat shared with peer instance ${N}: ${!!hp.lastHeartbeatAt}`); }
     // leave: B disconnects -> count drops to 2 for the rest
     B.disconnect(); await sleep(parseInt(membersMs, 10) + 600);
     A.disconnect(); C.disconnect(); S.disconnect();
