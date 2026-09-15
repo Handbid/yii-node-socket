@@ -12,6 +12,26 @@ Connect php, javascript, nodejs in one Yii application.
 - ability to set up data and get it in your javascript application
 - send events from javascript for all clients or clients in concrete room or channel
 
+##Relay scaling (HAN-3425)
+
+`lib/js/server/server.js` runs unchanged as a single process. Behind haproxy it can run as N
+processes that share rooms through Redis, selected by environment (nothing set = vendored behaviour):
+
+| variable | effect |
+|---|---|
+| `RELAY_ENGINE=uws` | uWebSockets.js engine via `io.attachApp` (≈ −55 % CPU per process); default `ws` |
+| `RELAY_REDIS_URL=redis://host:6379` | `@socket.io/redis-adapter` — broadcasts and room counts span processes |
+| `RELAY_PORT=3002` | socket port for this process (default: `server.config.js` port); one port per process behind haproxy |
+| `RELAY_HTTP_PORT` | uws only: express side port for `/healthz` (default `RELAY_PORT`+1000); uws also serves `/` and `/healthz` on the socket port |
+| `RELAY_INSTANCE=1` | label in logs and `/healthz` |
+| `RELAY_MEMBERS_EVERY_MS=1000` | coalesce `room_members_count` to one broadcast per room per interval (0 = every join) |
+| `RELAY_MAX_BUFFERED_BYTES` | per-socket send-queue cap (default 16 MiB) — ws drops the socket, uws skips it until it drains |
+| `RELAY_REUSEPORT=1` | Linux SO_REUSEPORT on one port — not for use behind haproxy (polling sessions need affinity) |
+
+Payload compression is intentionally not an option (measured: −48 % bytes for ×4.6 relay CPU).
+haproxy needs one `server` line per process, `balance source` (or another affinity) and
+`option httpchk GET /healthz`. Local matrix test: `tests/js/relay-scale-matrix.js`.
+
 ##Changes
  - Updated for Yii 2.0
  - Added Namespacing Updated for Yii 2.0
